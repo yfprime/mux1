@@ -2,14 +2,16 @@ package main
 
 import (
 	//"context"
-	//"fmt"
+	"sync"
 	"encoding/json"
 	"log"
 	"net/http"
-
+	"fmt"
+	//"time"
 	"math/rand"
 	"strconv"
 	"github.com/gorilla/mux"
+	"html/template"
 )
 
 //Structure for Books, similar to an object in Object-Oriented Programming.
@@ -20,7 +22,7 @@ type Book struct{
 	Title string `json:"title"`
 	Author *Author `json:"author"` //*Author is it's own kind of structure, which we create below.
 }
-
+var wg sync.WaitGroup 
 //Creating the Author Structure
 
 type Author struct{ 
@@ -48,6 +50,7 @@ func getBook(w http.ResponseWriter, r *http.Request){
 		}
 	}
 	json.NewEncoder(w).Encode(&Book{})
+	defer fmt.Println("Here is a list of all the books in storage.")
 
 }
 //To create a new book
@@ -95,14 +98,19 @@ func deleteBook(w http.ResponseWriter, r *http.Request){
 	 json.NewEncoder(w).Encode(books)
 
 }
-
+var templates *template.Template
 func main(){ 
 	// Initialize the r
 	r := mux.NewRouter()
 	//Mock Data
-	books = append(books, Book{ID:"1", Isbn:"74574",Title:"Book 1",Author: &Author{Firstname: "Yousuf", Lastname: "Farhan"}})
-	//Handling r: Establishing Endpoints
+	books = append(books, Book{ID:"2", Isbn:"7adsaddas4574",Title:"Book 2",Author: &Author{ID:"2",Firstname: "Andrew", Lastname: "Paul"}})
 
+	books = append(books, Book{ID:"1", Isbn:"74574",Title:"Book 1",Author: &Author{ID:"1",Firstname: "Yousuf", Lastname: "Farhan"}})
+	//Ensuring that only templaters from the templates folder are parsed and instantiated.
+	templates =template.Must(template.ParseGlob("templates/*.html"))
+	//Handling r: Establishing Endpoints
+	r.HandleFunc("/", indexTemplate)
+	http.Handle("/",r)
 	r.HandleFunc("/api/books", getBooks).Methods("GET")
 	r.HandleFunc("/api/books/{id}", getBook).Methods("GET")
 	r.HandleFunc("/api/books", createBook).Methods("POST")
@@ -111,4 +119,7 @@ func main(){
 
 	http.ListenAndServe(":8000", r)
 	log.Fatal(http.ListenAndServe(":8000",r))
+}
+func indexTemplate(w http.ResponseWriter, r* http.Request){ 
+	templates.ExecuteTemplate(w, "index.html",nil)
 }
