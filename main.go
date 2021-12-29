@@ -3,8 +3,10 @@ package main
 import (
 	//"context"
 	//"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
+
 	//"math/rand"
 	//"strconv"
 	"github.com/gorilla/mux"
@@ -31,8 +33,8 @@ type Author struct{
 var books []Book
 //To get all books
 func getBooks(w http.ResponseWriter, r *http.Request){
-
-
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
 }
 //To get a single book
 func getBook(w http.ResponseWriter, r *http.Request){
